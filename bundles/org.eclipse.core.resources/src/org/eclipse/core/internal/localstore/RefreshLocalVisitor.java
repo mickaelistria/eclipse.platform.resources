@@ -4,7 +4,7 @@
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
@@ -125,7 +125,7 @@ public class RefreshLocalVisitor implements IUnifiedTreeVisitor, ILocalStoreCons
 		else {
 			if (!target.exists(flags, false)) {
 				target = (Resource) workspace.getRoot().getFile(target.getFullPath());
-				// Use the basic file creation protocol since we don't want to 
+				// Use the basic file creation protocol since we don't want to
 				// create any content on disk.
 				workspace.createResource(target, false);
 			}
@@ -138,7 +138,7 @@ public class RefreshLocalVisitor implements IUnifiedTreeVisitor, ILocalStoreCons
 	/**
 	 * Returns the status of the nodes visited so far.  This will be a multi-status
 	 * that describes all problems that have occurred, or an OK status if everything
-	 * went smoothly.  
+	 * went smoothly.
 	 */
 	public IStatus getErrorStatus() {
 		return errors;
@@ -163,7 +163,7 @@ public class RefreshLocalVisitor implements IUnifiedTreeVisitor, ILocalStoreCons
 			return;
 		target.getLocalManager().updateLocalSync(info, node.getLastModified());
 		info.incrementContentId();
-		// forget content-related caching flags		
+		// forget content-related caching flags
 		info.clear(ICoreConstants.M_CONTENT_CACHE);
 		workspace.updateModificationStamp(info);
 	}
@@ -176,7 +176,7 @@ public class RefreshLocalVisitor implements IUnifiedTreeVisitor, ILocalStoreCons
 	 * deletion or creation -- Returns:
 	 * 	- RL_IN_SYNC - the resource is in-sync with the file system
 	 * 	- RL_NOT_IN_SYNC - the resource is not in-sync with file system
-	 * 	- RL_UNKNOWN - couldn't determine the sync status for this resource 
+	 * 	- RL_UNKNOWN - couldn't determine the sync status for this resource
 	 */
 	protected int synchronizeExistence(UnifiedTreeNode node, Resource target) throws CoreException {
 		if (node.existsInWorkspace()) {
@@ -266,11 +266,9 @@ public class RefreshLocalVisitor implements IUnifiedTreeVisitor, ILocalStoreCons
 				return false; // Don't visit children if we encountered an I/O error
 			Resource target = (Resource) node.getResource();
 			int targetType = target.getType();
-			if (targetType == IResource.PROJECT)
-				return true;
 			if (node.existsInWorkspace() && node.existsInFileSystem()) {
 				/* for folders we only care about updating local status */
-				if (targetType == IResource.FOLDER && node.isFolder()) {
+				if ((targetType == IResource.FOLDER || targetType == IResource.PROJECT) && node.isFolder()) {
 					// if not local, mark as local
 					if (!target.isLocal(IResource.DEPTH_ZERO))
 						makeLocal(node, target);
