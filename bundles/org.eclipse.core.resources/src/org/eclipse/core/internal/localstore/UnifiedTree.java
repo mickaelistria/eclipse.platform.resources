@@ -15,15 +15,14 @@
  *******************************************************************************/
 package org.eclipse.core.internal.localstore;
 
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
 import java.util.regex.Pattern;
 import org.eclipse.core.filesystem.*;
 import org.eclipse.core.internal.refresh.RefreshJob;
 import org.eclipse.core.internal.resources.*;
 import org.eclipse.core.internal.utils.Queue;
-import org.eclipse.core.resources.IContainer;
-import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.*;
 import org.eclipse.core.runtime.*;
 import org.eclipse.core.runtime.jobs.Job;
 
@@ -277,9 +276,34 @@ public class UnifiedTree {
 	 * Creates a child node for a location in the file system. Does nothing and returns null if the location does not correspond to a valid file/folder.
 	 */
 	protected UnifiedTreeNode createChildNodeFromFileSystem(UnifiedTreeNode parent, IFileInfo info) {
+		/*
+		 * This methods requires improvements as it's probably not the best place to load a project
+		 */
 		IPath childPath = parent.getResource().getFullPath().append(info.getName());
-		int type = info.isDirectory() ? IResource.FOLDER : IResource.FILE;
+		// TODO replace it with an implementation based on FileStore
+		java.io.File projectDescriptionFile = null;
+		int type = IResource.FILE;
+		if (info.isDirectory()) {
+			type = IResource.FOLDER;
+			// TODO replace it with an implementation based on FileStore
+			projectDescriptionFile = new java.io.File(parent.getResource().getLocation().toFile(), info.getName() + "/.project"); //$NON-NLS-1$
+			if (projectDescriptionFile.exists()) {
+				type = IResource.PROJECT;
+
+			}
+		}
 		IResource target = getWorkspace().newResource(childPath, type);
+		if (type == IResource.PROJECT) {
+			try {
+				InputStream projectDefinitionStream = new FileInputStream(projectDescriptionFile);
+				IProjectDescription projectDesc = getWorkspace().loadProjectDescription(projectDefinitionStream);
+				projectDefinitionStream.close();
+				projectDesc.setLocation(parent.getResource().getLocation().append(info.getName()));
+				((IProject) target).setDescription(projectDesc, new NullProgressMonitor());
+			} catch (Exception ex) {
+				// TODO handle description
+			}
+		}
 		return createNode(target, null, info, false);
 	}
 
