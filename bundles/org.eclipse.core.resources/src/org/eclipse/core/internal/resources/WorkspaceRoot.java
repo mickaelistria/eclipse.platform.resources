@@ -4,13 +4,12 @@
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     James Blackburn (Broadcom Corp.) - ongoing development
  *******************************************************************************/
 package org.eclipse.core.internal.resources;
-
 
 import java.net.URI;
 import java.util.*;
@@ -27,8 +26,8 @@ public class WorkspaceRoot extends Container implements IWorkspaceRoot {
 	 * that have been requested from this root.  This maps project
 	 * name strings to project handles.
 	 */
-	private final Map<String, Project> projectTable = Collections.synchronizedMap(new HashMap<String, Project>(16));
-	
+	private final Map<IPath, Project> projectTable = Collections.synchronizedMap(new HashMap<IPath, Project>(16));
+
 	/**
 	 * Cache of the canonicalized platform location.
 	 */
@@ -79,7 +78,7 @@ public class WorkspaceRoot extends Container implements IWorkspaceRoot {
 	public IContainer[] findContainersForLocationURI(URI location) {
 		return findContainersForLocationURI(location, NONE);
 	}
-	
+
 	/**
 	 * @see org.eclipse.core.resources.IWorkspaceRoot#findContainersForLocationURI(java.net.URI, int)
 	 */
@@ -103,7 +102,7 @@ public class WorkspaceRoot extends Container implements IWorkspaceRoot {
 	public IFile[] findFilesForLocationURI(URI location) {
 		return findFilesForLocationURI(location, NONE);
 	}
-	
+
 	/**
 	 * @see org.eclipse.core.resources.IWorkspaceRoot#findFilesForLocationURI(java.net.URI, int)
 	 */
@@ -176,23 +175,23 @@ public class WorkspaceRoot extends Container implements IWorkspaceRoot {
 	 * @see IWorkspaceRoot#getProject(String)
 	 */
 	public IProject getProject(String name) {
+		IPath projectPath = new Path(null, name).makeAbsolute();
+		return getProject(projectPath);
+	}
+
+	/**
+	 * @see IWorkspaceRoot#getProject(IPath)
+	 */
+	public IProject getProject(IPath projectPath) {
 		//first check our project cache
-		Project result = projectTable.get(name);
+		Project result = projectTable.get(projectPath);
 		if (result == null) {
-			IPath projectPath = new Path(null, name).makeAbsolute();
-			String message = "Path for project must have only one segment."; //$NON-NLS-1$
-			Assert.isLegal(projectPath.segmentCount() == ICoreConstants.PROJECT_SEGMENT_LENGTH, message);
-			//try to get the project using a canonical name
-			String canonicalName = projectPath.lastSegment();
-			result = projectTable.get(canonicalName);
-			if (result != null)
-				return result;
 			result = new Project(projectPath, workspace);
-			projectTable.put(canonicalName, result);
+			projectTable.put(projectPath, result);
 		}
 		return result;
 	}
-	
+
 	/**
 	 * @see IResource#getProjectRelativePath()
 	 */
@@ -247,28 +246,28 @@ public class WorkspaceRoot extends Container implements IWorkspaceRoot {
 		for (int i = 0; i < children.length; i++)
 			((Resource) children[i]).internalSetLocal(flag, depth);
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.core.internal.resources.Resource#isDerived(int)
 	 */
 	public boolean isDerived(int options) {
 		return false;//the root is never derived
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.core.internal.resources.Resource#isHidden()
 	 */
 	public boolean isHidden() {
 		return false;//the root is never hidden
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.core.internal.resources.Resource#isHidden(int)
 	 */
 	public boolean isHidden(int options) {
 		return false;//the root is never hidden
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.core.internal.resources.Resource#isTeamPrivateMember(int)
 	 */
@@ -282,7 +281,7 @@ public class WorkspaceRoot extends Container implements IWorkspaceRoot {
 	public boolean isLinked(int options) {
 		return false;//the root is never linked
 	}
-	
+
 	/**
 	 * @see IResource#isLocal(int)
 	 * @deprecated
@@ -320,7 +319,7 @@ public class WorkspaceRoot extends Container implements IWorkspaceRoot {
 
 	/**
 	 * @see IContainer#setDefaultCharset(String)
-	 * @deprecated Replaced by {@link #setDefaultCharset(String, IProgressMonitor)} which 
+	 * @deprecated Replaced by {@link #setDefaultCharset(String, IProgressMonitor)} which
 	 * 	is a workspace operation and reports changes in resource deltas.
 	 */
 	public void setDefaultCharset(String charset) {
@@ -331,7 +330,7 @@ public class WorkspaceRoot extends Container implements IWorkspaceRoot {
 		else
 			resourcesPreferences.setToDefault(ResourcesPlugin.PREF_ENCODING);
 	}
-	
+
 	public void setHidden(boolean isHidden) {
 		//workspace root cannot be set hidden
 	}
