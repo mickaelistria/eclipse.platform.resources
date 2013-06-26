@@ -4,7 +4,7 @@
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Serge Beauchamp (Freescale Semiconductor) - [229633] Project Path Variable Support
@@ -43,7 +43,7 @@ public class Project extends Container implements IProject {
 	 * @since 3.6
 	 */
 	public static final int SNAPSHOT_SET_AUTOLOAD = 2;
-	
+
 	protected Project(IPath path, Workspace container) {
 		super(path, container);
 	}
@@ -79,11 +79,11 @@ public class Project extends Container implements IProject {
 		ProjectDescription current = internalGetDescription();
 		current.setComment(description.getComment());
 		current.setSnapshotLocationURI(description.getSnapshotLocationURI());
-		
+
 		// set the build order before setting the references or the natures
 		current.setBuildSpec(description.getBuildSpec(true));
 
-		// set the references before the natures 
+		// set the references before the natures
 		boolean flushOrder = false;
 		IProject[] oldReferences = current.getReferencedProjects();
 		IProject[] newReferences = description.getReferencedProjects();
@@ -110,7 +110,7 @@ public class Project extends Container implements IProject {
 	 */
 	public void build(int trigger, IProgressMonitor monitor) throws CoreException {
 		if (!isAccessible())
-			return;		
+			return;
 		internalBuild(getActiveBuildConfig(), trigger, null, null, monitor);
 	}
 
@@ -145,10 +145,10 @@ public class Project extends Container implements IProject {
 	 */
 	public void checkAccessible(int flags) throws CoreException {
 		super.checkAccessible(flags);
-		if (!isOpen(flags)) {
-			String message = NLS.bind(Messages.resources_mustBeOpen, getFullPath());
-			throw new ResourceException(IResourceStatus.PROJECT_NOT_OPEN, getFullPath(), message, null);
-		}
+		//		if (!isOpen(flags)) {
+		//			String message = NLS.bind(Messages.resources_mustBeOpen, getFullPath());
+		//			throw new ResourceException(IResourceStatus.PROJECT_NOT_OPEN, getFullPath(), message, null);
+		//		}
 	}
 
 	/**
@@ -192,8 +192,8 @@ public class Project extends Container implements IProject {
 				monitor.subTask(msg);
 				if (!isOpen(flags))
 					return;
-				// Signal that this resource is about to be closed.  Do this at the very 
-				// beginning so that infrastructure pieces have a chance to do clean up 
+				// Signal that this resource is about to be closed.  Do this at the very
+				// beginning so that infrastructure pieces have a chance to do clean up
 				// while the resources still exist.
 				workspace.beginOperation(true);
 				workspace.broadcastEvent(LifecycleEvent.newEvent(LifecycleEvent.PRE_PROJECT_CLOSE, this));
@@ -230,7 +230,7 @@ public class Project extends Container implements IProject {
 			IProjectDescription desc = getDescription();
 			desc.setName(projectName);
 			desc.setLocation(null);
-			((ProjectDescription)desc).setSnapshotLocationURI(null);
+			((ProjectDescription) desc).setSnapshotLocationURI(null);
 			internalCopy(desc, updateFlags, monitor);
 		} else {
 			// will fail since we're trying to copy a project to a non-project
@@ -362,7 +362,7 @@ public class Project extends Container implements IProject {
 
 	protected void fixupAfterMoveSource() throws CoreException {
 		workspace.deleteResource(this);
-		// check if we deleted a preferences file 
+		// check if we deleted a preferences file
 		ProjectPreferences.deleted(this);
 	}
 
@@ -636,8 +636,9 @@ public class Project extends Container implements IProject {
 					innerMonitor.done();
 				}
 			}
+
 			/**
-			 * Returns whether this project should be built for a given trigger. 
+			 * Returns whether this project should be built for a given trigger.
 			 * @return <code>true</code> if the build should proceed, and <code>false</code> otherwise.
 			 */
 			private boolean shouldBuild() {
@@ -651,7 +652,6 @@ public class Project extends Container implements IProject {
 		}, null, IWorkspace.AVOID_UPDATE, monitor);
 	}
 
-
 	/**
 	 * Closes the project.  This is called during restore when there is a failure
 	 * to read the project description.  Since it is called during workspace restore,
@@ -660,7 +660,7 @@ public class Project extends Container implements IProject {
 	protected void internalClose() throws CoreException {
 		workspace.flushBuildOrder();
 		getMarkerManager().removeMarkers(this, IResource.DEPTH_INFINITE);
-		// remove each member from the resource tree. 
+		// remove each member from the resource tree.
 		// DO NOT use resource.delete() as this will delete it from disk as well.
 		IResource[] members = members(IContainer.INCLUDE_PHANTOMS | IContainer.INCLUDE_TEAM_PRIVATE_MEMBERS | IContainer.INCLUDE_HIDDEN);
 		for (int i = 0; i < members.length; i++) {
@@ -774,7 +774,7 @@ public class Project extends Container implements IProject {
 
 		//copy the hidden metadata that we store in the project description
 		ProjectDescription projectDesc = (ProjectDescription) destDesc;
-		ProjectDescription internalDesc = ((Project)destination.getProject()).internalGetDescription();
+		ProjectDescription internalDesc = ((Project) destination.getProject()).internalGetDescription();
 		projectDesc.setLinkDescriptions(internalDesc.getLinks());
 		projectDesc.setFilterDescriptions(internalDesc.getFilters());
 		projectDesc.setVariableDescriptions(internalDesc.getVariables());
@@ -836,7 +836,7 @@ public class Project extends Container implements IProject {
 		Collection<IBuildConfiguration> configs = new LinkedHashSet<IBuildConfiguration>(refs.length);
 		for (int i = 0; i < refs.length; i++) {
 			try {
-				configs.add((((BuildConfiguration)refs[i]).getBuildConfig()));
+				configs.add((((BuildConfiguration) refs[i]).getBuildConfig()));
 			} catch (CoreException e) {
 				// The project isn't accessible, or the build configuration doesn't exist
 				// on the project.  If requested return the full set of build references which may
@@ -889,7 +889,8 @@ public class Project extends Container implements IProject {
 	 * @see IResource#isAccessible()
 	 */
 	public boolean isAccessible() {
-		return isOpen();
+		//return isOpen();
+		return true;
 	}
 
 	/* (non-Javadoc)
@@ -989,13 +990,13 @@ public class Project extends Container implements IProject {
 		}
 		internalLoadSnapshot(options, snapshotLocation, monitor);
 	}
-	
+
 	/**
 	 * Loads a snapshot of project meta-data from the given location URI.
 	 * Like {@link IProject#loadSnapshot(int, URI, IProgressMonitor)} but can be
 	 * called when the project is open.
-	 * 
-	 * @see IProject#saveSnapshot(int, URI, IProgressMonitor) 
+	 *
+	 * @see IProject#saveSnapshot(int, URI, IProgressMonitor)
 	 */
 	private void internalLoadSnapshot(int options, URI snapshotLocation, IProgressMonitor monitor) throws CoreException {
 		if ((options & SNAPSHOT_TREE) != 0) {
@@ -1142,9 +1143,8 @@ public class Project extends Container implements IProject {
 				if ((!used && unknownChildren) || !minorIssuesDuringRestore) {
 					boolean refreshed = false;
 					if (!used) {
-						refreshed = workspace.getSaveManager().restoreFromRefreshSnapshot(
-								this, Policy.subMonitorFor(monitor, Policy.opWork * 20 / 100));
-						if (refreshed) {	// account for the refresh work
+						refreshed = workspace.getSaveManager().restoreFromRefreshSnapshot(this, Policy.subMonitorFor(monitor, Policy.opWork * 20 / 100));
+						if (refreshed) { // account for the refresh work
 							monitor.worked(Policy.opWork * 60 / 100);
 						}
 					}
@@ -1186,17 +1186,17 @@ public class Project extends Container implements IProject {
 	 * links to bring the links in sync with those described in the project description.
 	 * @param newDescription the new project description that may have
 	 * 	changed link descriptions.
-	 * @return status ok if everything went well, otherwise an ERROR multi-status 
+	 * @return status ok if everything went well, otherwise an ERROR multi-status
 	 * 	describing the problems encountered.
 	 */
 	public IStatus reconcileLinksAndGroups(ProjectDescription newDescription) {
 		String msg = Messages.links_errorLinkReconcile;
-		HashMap<IPath,LinkDescription> newLinks = newDescription.getLinks();
+		HashMap<IPath, LinkDescription> newLinks = newDescription.getLinks();
 		MultiStatus status = new MultiStatus(ResourcesPlugin.PI_RESOURCES, IResourceStatus.OPERATION_FAILED, msg, null);
 		//walk over old linked resources and remove those that are no longer defined
 		ProjectDescription oldDescription = internalGetDescription();
 		if (oldDescription != null) {
-			HashMap<IPath,LinkDescription> oldLinks = oldDescription.getLinks();
+			HashMap<IPath, LinkDescription> oldLinks = oldDescription.getLinks();
 			if (oldLinks != null) {
 				for (Iterator<LinkDescription> it = oldLinks.values().iterator(); it.hasNext();) {
 					LinkDescription oldLink = it.next();
@@ -1303,14 +1303,14 @@ public class Project extends Container implements IProject {
 			monitor.done();
 		}
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see IProject#setDescription(IProjectDescription, int, IProgressMonitor)
 	 */
 	public void setDescription(IProjectDescription description, int updateFlags, IProgressMonitor monitor) throws CoreException {
 		// FIXME - update flags should be honored:
 		//    KEEP_HISTORY means capture .project file in local history
-		//    FORCE means overwrite any existing .project file 
+		//    FORCE means overwrite any existing .project file
 		monitor = Policy.monitorFor(monitor);
 		try {
 			monitor.beginTask(Messages.resources_setDesc, Policy.totalWork);
@@ -1379,7 +1379,7 @@ public class Project extends Container implements IProject {
 	}
 
 	/**
-	 * Restore the non-persisted state for the project.  For example, read and set 
+	 * Restore the non-persisted state for the project.  For example, read and set
 	 * the description from the local meta area.  Also, open the property store etc.
 	 * This method is used when an open project is restored and so emulates
 	 * the behaviour of open().
@@ -1416,8 +1416,8 @@ public class Project extends Container implements IProject {
 	}
 
 	/**
-	 * The project description file on disk is better than the description in memory.  
-	 * Make sure the project description in memory is synchronized with the 
+	 * The project description file on disk is better than the description in memory.
+	 * Make sure the project description in memory is synchronized with the
 	 * description file contents.
 	 */
 	protected void updateDescription() throws CoreException {
