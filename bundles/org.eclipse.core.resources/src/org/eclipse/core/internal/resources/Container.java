@@ -4,7 +4,7 @@
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     James Blackburn (Broadcom Corp.) - ongoing development
@@ -38,6 +38,7 @@ public abstract class Container extends Resource implements IContainer {
 		for (int i = 0; i < members.length; i++)
 			((Resource) members[i]).convertToPhantom();
 	}
+
 	/**
 	 * @see IContainer#createFilter(int, FileInfoMatcherDescription, int, IProgressMonitor)
 	 */
@@ -59,7 +60,7 @@ public abstract class Container extends Resource implements IContainer {
 				//save the filter in the project description
 				filter = new FilterDescription(this, type, matcherDescription);
 				filter.setId(System.currentTimeMillis());
-				
+
 				Project project = (Project) getProject();
 				project.internalGetDescription().addFilter(getProjectRelativePath(), filter);
 				project.writeDescription(IResource.NONE);
@@ -141,7 +142,7 @@ public abstract class Container extends Resource implements IContainer {
 		try {
 			children = workspace.tree.getChildren(path);
 		} catch (IllegalArgumentException e) {
-			//concurrency problem: the container has been deleted by another 
+			//concurrency problem: the container has been deleted by another
 			//thread during this call.  Just return empty children set
 		}
 		if (children == null || children.length == 0)
@@ -187,7 +188,7 @@ public abstract class Container extends Resource implements IContainer {
 		}
 		return new IResourceFilterDescription[0];
 	}
-	
+
 	public boolean hasFilters() {
 		IProject project = getProject();
 		if (project == null)
@@ -220,6 +221,20 @@ public abstract class Container extends Resource implements IContainer {
 	 */
 	public IFolder getFolder(IPath childPath) {
 		return (IFolder) workspace.newResource(getFullPath().append(childPath), FOLDER);
+	}
+
+	/* (non-Javadoc)
+	 * @see IContainer#getFile(IPath)
+	 */
+	public IProject getNestedProject(String name) {
+		return (IProject) workspace.newResource(getFullPath().append(name), PROJECT);
+	}
+
+	/* (non-Javadoc)
+	 * @see IContainer#getFile(IPath)
+	 */
+	public IProject getNestedProject(IPath childPath) {
+		return (IProject) workspace.newResource(getFullPath().append(childPath), PROJECT);
 	}
 
 	/**
@@ -285,7 +300,7 @@ public abstract class Container extends Resource implements IContainer {
 				monitor.worked(Policy.opWork * 5 / 100);
 				//save the filter in the project description
 				Project project = (Project) getProject();
-				project.internalGetDescription().removeFilter(getProjectRelativePath(), (FilterDescription)filterDescription);
+				project.internalGetDescription().removeFilter(getProjectRelativePath(), (FilterDescription) filterDescription);
 				project.writeDescription(IResource.NONE);
 				monitor.worked(Policy.opWork * 5 / 100);
 
@@ -349,7 +364,7 @@ public abstract class Container extends Resource implements IContainer {
 
 	/** (non-Javadoc)
 	 * @see IContainer#setDefaultCharset(String)
-	 * @deprecated Replaced by {@link #setDefaultCharset(String, IProgressMonitor)} which 
+	 * @deprecated Replaced by {@link #setDefaultCharset(String, IProgressMonitor)} which
 	 * 	is a workspace operation and reports changes in resource deltas.
 	 */
 	public void setDefaultCharset(String charset) throws CoreException {
@@ -366,7 +381,7 @@ public abstract class Container extends Resource implements IContainer {
 		try {
 			String message = NLS.bind(Messages.resources_settingDefaultCharsetContainer, getFullPath());
 			monitor.beginTask(message, Policy.totalWork);
-			// need to get the project as a scheduling rule because we might be 
+			// need to get the project as a scheduling rule because we might be
 			// creating a new folder/file to hold the project settings
 			final ISchedulingRule rule = workspace.getRuleFactory().charsetRule(this);
 			try {
@@ -392,7 +407,7 @@ public abstract class Container extends Resource implements IContainer {
 								return false;
 							info.incrementCharsetGenerationCount();
 							return true;
-						}						
+						}
 						// does it already have an encoding explicitly set?
 						if (workspace.getCharsetManager().getCharsetFor(nodePath, false) != null)
 							return false;

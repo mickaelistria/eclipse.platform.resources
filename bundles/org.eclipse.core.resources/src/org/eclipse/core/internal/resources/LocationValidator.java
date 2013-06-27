@@ -1,13 +1,14 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2010 IBM Corporation and others.
+ * Copyright (c) 2005, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Serge Beauchamp (Freescale Semiconductor) - [229633] Project Path Variable Support
+ *     Mickael Istria (Red Hat) - 245412 Nested projects
  *******************************************************************************/
 package org.eclipse.core.internal.resources;
 
@@ -211,7 +212,7 @@ public class LocationValidator {
 	}
 
 	/**
-	 * Validates that the given workspace path is valid for the given type.  If 
+	 * Validates that the given workspace path is valid for the given type.  If
 	 * <code>lastSegmentOnly</code> is true, it is assumed that all segments except
 	 * the last one have previously been validated.  This is an optimization for validating
 	 * a leaf resource when it is known that the parent exists (and thus its parent path
@@ -245,33 +246,25 @@ public class LocationValidator {
 		}
 
 		/* validate segments */
-		int numberOfSegments = path.segmentCount();
-		if ((type & IResource.PROJECT) != 0) {
-			if (numberOfSegments == ICoreConstants.PROJECT_SEGMENT_LENGTH) {
-				return validateName(path.segment(0), IResource.PROJECT);
-			} else if (type == IResource.PROJECT) {
-				message = NLS.bind(Messages.resources_projectPath, path);
-				return new ResourceStatus(IResourceStatus.INVALID_VALUE, null, message);
-			}
-		}
-		if ((type & (IResource.FILE | IResource.FOLDER)) != 0) {
-			if (numberOfSegments < ICoreConstants.MINIMUM_FILE_SEGMENT_LENGTH) {
-				message = NLS.bind(Messages.resources_resourcePath, path);
-				return new ResourceStatus(IResourceStatus.INVALID_VALUE, null, message);
-			}
-			int fileFolderType = type &= ~IResource.PROJECT;
-			int segmentCount = path.segmentCount();
-			if (lastSegmentOnly)
-				return validateName(path.segment(segmentCount - 1), fileFolderType);
-			IStatus status = validateName(path.segment(0), IResource.PROJECT);
-			if (!status.isOK())
-				return status;
-			// ignore first segment (the project)
-			for (int i = 1; i < segmentCount; i++) {
-				status = validateName(path.segment(i), fileFolderType);
-				if (!status.isOK())
+		int segmentCount = path.segmentCount();
+		if ((type & IResource.PROJECT) != 0 && segmentCount == 1) {
+			return validateName(path.segment(0), IResource.PROJECT);
+		} else if (segmentCount >= ICoreConstants.MINIMUM_FILE_SEGMENT_LENGTH) {
+			IStatus status = null;
+			if (!lastSegmentOnly) {
+				status = validateName(path.segment(0), IResource.PROJECT);
+				if (!status.isOK()) {
 					return status;
+				}
+				// ignore first segment (the project) and last segment (depends on type)
+				for (int i = 1; i < segmentCount - 1; i++) {
+					status = validateName(path.segment(i), IResource.FOLDER);
+					if (!status.isOK()) {
+						return status;
+					}
+				}
 			}
+			status = validateName(path.segment(segmentCount - 1), type);
 			return Status.OK_STATUS;
 		}
 		message = NLS.bind(Messages.resources_invalidPath, path);

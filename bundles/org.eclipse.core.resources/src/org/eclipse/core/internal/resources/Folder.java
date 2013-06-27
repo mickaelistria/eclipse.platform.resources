@@ -1,13 +1,14 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Serge Beauchamp (Freescale Semiconductor) - [229633] Group and Project Path Variable Support
+ *     Mickael Istria (Red Hat) - 245412 Nested projects
  *******************************************************************************/
 package org.eclipse.core.internal.resources;
 
@@ -75,12 +76,12 @@ public class Folder extends Container implements IFolder {
 	/* (non-Javadoc)
 	 * @see IFolder#create(int, boolean, IProgressMonitor)
 	 */
-	public void create(int updateFlags, boolean local, IProgressMonitor monitor) throws CoreException {	
+	public void create(int updateFlags, boolean local, IProgressMonitor monitor) throws CoreException {
 		if ((updateFlags & IResource.VIRTUAL) == IResource.VIRTUAL) {
 			createLink(LinkDescription.VIRTUAL_LOCATION, updateFlags, monitor);
 			return;
 		}
-		
+
 		final boolean force = (updateFlags & IResource.FORCE) != 0;
 		monitor = Policy.monitorFor(monitor);
 		try {
@@ -190,5 +191,9 @@ public class Folder extends Container implements IFolder {
 		} finally {
 			monitor.done();
 		}
+	}
+
+	public void turnIntoProject(IProgressMonitor monitor) throws CoreException {
+		this.workspace.getRoot().getProject(this.getFullPath()).createOnExistingFolder(monitor);
 	}
 }
