@@ -885,6 +885,21 @@ public class IContentTypeManagerTest extends ContentTypeTest {
 		assertTrue("3.0", contains(multiple, xmlContentType));
 	}
 
+	public void testFindContentTypeRegexp() throws UnsupportedEncodingException, IOException, CoreException {
+		IContentTypeManager contentTypeManager = Platform.getContentTypeManager();
+		IContentTypeMatcher finder = contentTypeManager.getMatcher(new LocalSelectionPolicy(), null);
+
+		IContentType textContentType = contentTypeManager.getContentType(Platform.PI_RUNTIME + '.' + "text");
+
+		IContentType single = finder.findContentTypeFor(getInputStream("Just a test"), changeCase("someText.unknown"));
+		assertNull("File pattern unknown at that point", single);
+
+		textContentType.addFileSpec("*Text*", IContentType.FILE_REGEXP_SPEC);
+		single = finder.findContentTypeFor(getInputStream("Just a test"), changeCase("someText.unknown"));
+		assertEquals("Text content should now match *Text* files", textContentType, single);
+
+	}
+
 	public void testImportFileAssociation() throws CoreException {
 		IContentTypeManager contentTypeManager = Platform.getContentTypeManager();
 		assertNull(contentTypeManager.findContentTypeFor("*.bug122217"));
